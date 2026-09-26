@@ -1,0 +1,534 @@
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz e Interactivo: Operaciones en la Recta Numérica</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .app-container {
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 800px;
+      padding: 25px;
+    }
+    h1 {
+      color: #1e3a8a;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 5px;
+      font-size: 1.75rem;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+    }
+    
+    /* SIMULADOR DE RECTA NUMÉRICA */
+    .numberline-card {
+      background-color: #f8fafc;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 25px;
+    }
+    .numberline-card h2 {
+      margin: 0 0 10px 0;
+      font-size: 1.1rem;
+      color: #334155;
+      text-align: center;
+    }
+    .numberline-wrapper {
+      overflow-x: auto;
+      padding: 20px 10px 10px 10px;
+    }
+    .numberline-svg {
+      width: 100%;
+      min-width: 600px;
+      height: 90px;
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .controls-row label {
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+    .controls-row input[type="number"] {
+      width: 65px;
+      padding: 6px 8px;
+      border: 1px solid #94a3b8;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .btn-step {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .btn-step:hover {
+      background-color: #0369a1;
+    }
+    .btn-reset-line {
+      background-color: #64748b;
+      color: white;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* ESTILOS DEL QUIZ */
+    .question-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .question-title {
+      font-weight: 700;
+      color: #1e293b;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media(max-width: 500px) {
+      .options-grid { grid-template-columns: 1fr; }
+    }
+    .btn-option {
+      background-color: #f1f5f9;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-option:hover:not([disabled]) {
+      background-color: #2563eb;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
+    .btn-option.correct {
+      background-color: #16a34a !important;
+      color: #ffffff !important;
+      border-color: #15803d !important;
+    }
+    .btn-option.incorrect {
+      background-color: #dc2626 !important;
+      color: #ffffff !important;
+      border-color: #b91c1c !important;
+    }
+    .btn-option[disabled] {
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+    .feedback-box {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .feedback-box.correct {
+      background-color: #f0fdf4;
+      color: #166534;
+      border-left: 4px solid #22c55e;
+    }
+    .feedback-box.incorrect {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border-left: 4px solid #ef4444;
+    }
+
+    /* RESULTADOS */
+    #result-panel {
+      display: none;
+      background: #eff6ff;
+      border: 2px solid #3b82f6;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-top: 25px;
+    }
+    #result-panel h2 {
+      margin-top: 0;
+      color: #1d4ed8;
+    }
+    .score-display {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #0f172a;
+      margin: 10px 0;
+    }
+    .btn-restart {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-restart:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <h1>Operaciones en la Recta Numérica</h1>
+  <p class="subtitle">Utiliza la recta interactiva para explorar los desplazamientos antes o después de responder los 15 ejercicios.</p>
+
+  <!-- SIMULADOR INTERACTIVO DE RECTA NUMÉRICA -->
+  <div class="numberline-card">
+    <h2>Simulador Interactivo de la Recta Numérica</h2>
+    <div class="numberline-wrapper">
+      <svg id="svg-numberline" class="numberline-svg" viewBox="0 0 620 90"></svg>
+    </div>
+    <div class="controls-row">
+      <label for="start-pos">Punto de inicio:</label>
+      <input type="number" id="start-pos" value="0" min="-15" max="15" onchange="setStartPos(this.value)">
+      <button class="btn-step" onclick="movePos(-1)">◀ Mover 1 a la Izquierda (-)</button>
+      <button class="btn-step" onclick="movePos(1)">Mover 1 a la Derecha (+) ▶</button>
+      <button class="btn-reset-line" onclick="resetLine()">Reiniciar a 0</button>
+    </div>
+  </div>
+
+  <!-- SECCIÓN DE PREGUNTAS -->
+  <div id="quiz-wrapper"></div>
+
+  <!-- PANEL DE RESULTADOS -->
+  <div id="result-panel">
+    <h2>¡Has completado los 15 ejercicios!</h2>
+    <div class="score-display" id="score-text"></div>
+    <button class="btn-restart" onclick="initQuiz()">Volver a intentar</button>
+  </div>
+</div>
+
+<script>
+  // --- LÓGICA DE LA RECTA NUMÉRICA INTERACTIVA ---
+  let currentPos = 0;
+  const minVal = -15;
+  const maxVal = 15;
+
+  function renderNumberLine() {
+    const svg = document.getElementById("svg-numberline");
+    svg.innerHTML = "";
+
+    const startX = 20;
+    const endX = 600;
+    const yBaseline = 50;
+    const totalTicks = maxVal - minVal;
+    const stepX = (endX - startX) / totalTicks;
+
+    // Línea horizontal principal
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", startX - 10);
+    line.setAttribute("y1", yBaseline);
+    line.setAttribute("x2", endX + 10);
+    line.setAttribute("y2", yBaseline);
+    line.setAttribute("stroke", "#475569");
+    line.setAttribute("stroke-width", "3");
+    svg.appendChild(line);
+
+    // Marcas y números
+    for (let i = minVal; i <= maxVal; i++) {
+      const x = startX + (i - minVal) * stepX;
+      
+      const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      tick.setAttribute("x1", x);
+      tick.setAttribute("y1", yBaseline - (i === 0 ? 12 : 6));
+      tick.setAttribute("x2", x);
+      tick.setAttribute("y2", yBaseline + (i === 0 ? 12 : 6));
+      tick.setAttribute("stroke", i === 0 ? "#1e293b" : "#94a3b8");
+      tick.setAttribute("stroke-width", i === 0 ? "3" : "1.5");
+      svg.appendChild(tick);
+
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", x);
+      text.setAttribute("y", yBaseline + 24);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("font-size", i === 0 ? "13" : "11");
+      text.setAttribute("font-weight", i === 0 ? "bold" : "normal");
+      text.setAttribute("fill", i === 0 ? "#0f172a" : "#64748b");
+      text.textContent = i;
+      svg.appendChild(text);
+    }
+
+    // Indicador de Posición Actual
+    const currentX = startX + (currentPos - minVal) * stepX;
+    
+    const pointer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    pointer.setAttribute("cx", currentX);
+    pointer.setAttribute("cy", yBaseline);
+    pointer.setAttribute("r", "8");
+    pointer.setAttribute("fill", "#2563eb");
+    pointer.setAttribute("stroke", "#ffffff");
+    pointer.setAttribute("stroke-width", "2");
+    svg.appendChild(pointer);
+
+    // Texto flotante de posición
+    const posLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    posLabel.setAttribute("x", currentX);
+    posLabel.setAttribute("y", yBaseline - 16);
+    posLabel.setAttribute("text-anchor", "middle");
+    posLabel.setAttribute("font-size", "13");
+    posLabel.setAttribute("font-weight", "bold");
+    posLabel.setAttribute("fill", "#2563eb");
+    posLabel.textContent = `Posición: ${currentPos}`;
+    svg.appendChild(posLabel);
+  }
+
+  function setStartPos(val) {
+    let num = parseInt(val);
+    if (isNaN(num)) num = 0;
+    if (num < minVal) num = minVal;
+    if (num > maxVal) num = maxVal;
+    currentPos = num;
+    document.getElementById("start-pos").value = currentPos;
+    renderNumberLine();
+  }
+
+  function movePos(delta) {
+    let next = currentPos + delta;
+    if (next >= minVal && next <= maxVal) {
+      currentPos = next;
+      document.getElementById("start-pos").value = currentPos;
+      renderNumberLine();
+    }
+  }
+
+  function resetLine() {
+    currentPos = 0;
+    document.getElementById("start-pos").value = 0;
+    renderNumberLine();
+  }
+
+
+  // --- BANCO DE 15 PREGUNTAS (DESPLAZAMIENTO EN LA RECTA) ---
+  const questions = [
+    {
+      text: "1. Si comienzas en el número -9 y avanzas 4 unidades a la derecha (+4), ¿en qué posición quedas?",
+      options: ["-13", "-5", "+5", "+13"],
+      correct: 1,
+      explanation: "Si partes de -9 y avanzas 4 pasos a la derecha en la recta numérica, te acercas al cero y terminas en -5."
+    },
+    {
+      text: "2. Resuelve la operación: -6 - 3",
+      options: ["-3", "-9", "+3", "+9"],
+      correct: 1,
+      explanation: "Restar 3 significa desplazarte 3 unidades a la izquierda. Partiendo de -6 y moviéndote 3 a la izquierda llegas a -9."
+    },
+    {
+      text: "3. ¿Qué número obtienes si te ubicas en +2 y te mueves 7 unidades a la izquierda?",
+      options: ["+9", "+5", "-5", "-9"],
+      correct: 2,
+      explanation: "Moverse a la izquierda es restar. Partiendo de +2, pasas por el 0 y avanzas hasta llegar a -5."
+    },
+    {
+      text: "4. Calcula: -4 - (-5)",
+      options: ["-9", "-1", "+1", "+9"],
+      correct: 2,
+      explanation: "Restar un número negativo equivale a sumar su opuesto (avanzar a la derecha). Entonces -4 - (-5) equivale a -4 + 5 = +1."
+    },
+    {
+      text: "5. Si estás en -8 y sumas 8 (+8), ¿a qué punto de la recta llegas?",
+      options: ["-16", "0", "+16", "-8"],
+      correct: 1,
+      explanation: "Avanzar 8 unidades a la derecha desde -8 te lleva exactamente al origen de la recta numérica, que es el 0."
+    },
+    {
+      text: "6. Resuelve la operación: -5 + 2",
+      options: ["-7", "-3", "+3", "+7"],
+      correct: 1,
+      explanation: "Empiezas en -5 y sumas 2 (avanzas 2 posiciones a la derecha), por lo que terminas en -3."
+    },
+    {
+      text: "7. Si estás en el número -12 y te desplazas 5 unidades hacia la derecha, ¿dónde te ubicas?",
+      options: ["-17", "-7", "+7", "+17"],
+      correct: 1,
+      explanation: "Al desplazarte a la derecha desde -12 sumas 5 unidades, quedando en el punto -7."
+    },
+    {
+      text: "8. ¿Cuál es el resultado de 3 - 9?",
+      options: ["-6", "+6", "-12", "+12"],
+      correct: 0,
+      explanation: "Partes del +3 y retrocedes 9 unidades a la izquierda. Llegas al 0 (3 pasos) y continúas 6 pasos más hacia la izquierda (-6)."
+    },
+    {
+      text: "9. Resuelve: -2 - 4",
+      options: ["+2", "-2", "+6", "-6"],
+      correct: 3,
+      explanation: "Partiendo de -2, restar 4 significa avanzar otros 4 lugares hacia la izquierda, dando como resultado -6."
+    },
+    {
+      text: "10. Si comienzas en -10 y te desplazas 12 unidades a la derecha, ¿a qué valor llegas?",
+      options: ["-22", "-2", "+2", "+22"],
+      correct: 2,
+      explanation: "Desde -10, avanzas 10 unidades para llegar a 0 y 2 unidades más a la derecha, ubicándote en +2."
+    },
+    {
+      text: "11. Resuelve: -5 - (-8)",
+      options: ["-13", "-3", "+3", "+13"],
+      correct: 2,
+      explanation: "Restar -8 se transforma en sumar 8 (moverte 8 unidades a la derecha). Partiendo de -5 llegas a +3."
+    },
+    {
+      text: "12. En la recta numérica, si retrocedes 6 posiciones a la izquierda partiendo desde +1, terminas en:",
+      options: ["-5", "+7", "-7", "+5"],
+      correct: 0,
+      explanation: "Desde +1 mueves 1 unidad para llegar a 0 y 5 unidades más a la izquierda, dando -5."
+    },
+    {
+      text: "13. Resuelve: -7 + 10",
+      options: ["-3", "+3", "-17", "+17"],
+      correct: 1,
+      explanation: "Sumar 10 a -7 implica dar 10 pasos a la derecha desde -7, lo que te ubica en +3."
+    },
+    {
+      text: "14. Si a -3 le sumas -4 [es decir, -3 + (-4)], ¿cuál es el resultado?",
+      options: ["+1", "-1", "+7", "-7"],
+      correct: 3,
+      explanation: "Sumar un valor negativo es equivalente a restar (desplazarse a la izquierda). De -3 avanzas 4 posiciones a la izquierda y llegas a -7."
+    },
+    {
+      text: "15. ¿Cuál es el resultado de 0 - 6?",
+      options: ["0", "+6", "-6", "Undefined"],
+      correct: 2,
+      explanation: "Partiendo del origen (0), restar 6 significa moverse 6 unidades hacia la izquierda, llegando a -6."
+    }
+  ];
+
+  let score = 0;
+  let answeredCount = 0;
+
+  function initQuiz() {
+    score = 0;
+    answeredCount = 0;
+    document.getElementById("result-panel").style.display = "none";
+    const wrapper = document.getElementById("quiz-wrapper");
+    wrapper.innerHTML = "";
+
+    questions.forEach((q, index) => {
+      const card = document.createElement("div");
+      card.className = "question-card";
+
+      const title = document.createElement("div");
+      title.className = "question-title";
+      title.innerText = q.text;
+      card.appendChild(title);
+
+      const grid = document.createElement("div");
+      grid.className = "options-grid";
+
+      q.options.forEach((opt, optIdx) => {
+        const btn = document.createElement("button");
+        btn.className = "btn-option";
+        btn.innerText = opt;
+        btn.onclick = () => evaluateAnswer(index, optIdx, btn);
+        grid.appendChild(btn);
+      });
+
+      card.appendChild(grid);
+
+      const feedback = document.createElement("div");
+      feedback.id = `feedback-${index}`;
+      feedback.className = "feedback-box";
+      card.appendChild(feedback);
+
+      wrapper.appendChild(card);
+    });
+
+    resetLine();
+  }
+
+  function evaluateAnswer(qIdx, selectedOpt, clickedBtn) {
+    const q = questions[qIdx];
+    const card = clickedBtn.closest(".question-card");
+    const buttons = card.querySelectorAll(".btn-option");
+    const feedbackBox = document.getElementById(`feedback-${qIdx}`);
+
+    buttons.forEach(btn => btn.disabled = true);
+
+    if (selectedOpt === q.correct) {
+      score++;
+      clickedBtn.classList.add("correct");
+      feedbackBox.className = "feedback-box correct";
+      feedbackBox.innerHTML = `<strong>¡Correcto!</strong> ${q.explanation}`;
+    } else {
+      clickedBtn.classList.add("incorrect");
+      buttons[q.correct].classList.add("correct");
+      feedbackBox.className = "feedback-box incorrect";
+      feedbackBox.innerHTML = `<strong>Incorrecto.</strong> La respuesta correcta es <strong>${q.options[q.correct]}</strong>.<br>${q.explanation}`;
+    }
+
+    feedbackBox.style.display = "block";
+    answeredCount++;
+
+    if (answeredCount === questions.length) {
+      showResults();
+    }
+  }
+
+  function showResults() {
+    const panel = document.getElementById("result-panel");
+    const scoreText = document.getElementById("score-text");
+    const grade = (score / questions.length) * 10;
+    scoreText.innerText = `Aciertos: ${score} de ${questions.length} | Calificación: ${grade.toFixed(1)} / 10`;
+    panel.style.display = "block";
+    panel.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Inicialización al cargar la página
+  window.onload = function() {
+    renderNumberLine();
+    initQuiz();
+  };
+</script>
+
+</body>
+</html>
